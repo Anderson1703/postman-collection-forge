@@ -22,7 +22,7 @@ export const docFileoperation = (dataJson: object, op: "import" | "update", apiK
                         reject(errChecking)
                     })
             }).catch(err => {
-                console.log("error on write file", err)
+                //console.log("error on write file", err)
                 reject({ message: "error on write file", err })
             })
     })
@@ -55,16 +55,16 @@ const checkFolder = (op: "import" | "update", apiKey: string, idCollection?: str
                             reject(errorUpdating)
                         })
                 } else {
-                    console.log("to update you need to provide the collection id")
+                    //console.log("to update you need to provide the collection id")
                     reject({ message: "to update you need to provide the collection id" })
                 }
             } else {
-                console.log("op not know")
+                //console.log("op not know")
                 reject({ message: "op not know" })
             }
 
         } else {
-            console.error(`File ./docs/document-postman.json does not exist`);
+            //console.error(`File ./docs/document-postman.json does not exist`);
             reject({ message: "File ./docs/document-postman.json does not exist" })
         }
     })
@@ -90,7 +90,7 @@ const verifyJsonStructure = (jsonContent: any) => {
  * @param {any} jsonData - The JSON data to be imported.
  * @param {string} apiKey - The API key for Postman API access.
  */
-const importJsonToPostman = (data: any, apiKey: string) => {
+export const importJsonToPostman = (data: any, apiKey: string) => {
     return new Promise((resolve, reject) => {
         fetch(`https://api.getpostman.com/collections?apikey=${apiKey}`, {
             method: "POST",
@@ -100,11 +100,11 @@ const importJsonToPostman = (data: any, apiKey: string) => {
             body: data
         }).then(response => response.json())
             .then(response => {
-                console.log("importing collection succesfuly")
+                //console.log("importing collection succesfuly")
                 resolve(response);
             })
             .catch(error => {
-                console.log("error on import json to postman", error);
+                //console.log("error on import json to postman", error);
                 reject({ message: "error on import json to postman", error })
             });
     })
@@ -116,7 +116,7 @@ const importJsonToPostman = (data: any, apiKey: string) => {
  * @param {any} data - The data to update the collection with.
  * @param {string} apiKey - The API key for Postman API access.
  */
-const updateCollection = (id: string, data: any, apiKey: string) => {
+export const updateCollection = (id: string, data: any, apiKey: string) => {
     return new Promise((resolve, reject) => {
         fetch(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`, {
             method: "PUT",
@@ -126,11 +126,11 @@ const updateCollection = (id: string, data: any, apiKey: string) => {
             body: data
         }).then(response => response.json())
             .then(response => {
-                console.log("updating collection succesfuly")
+                //console.log("updating collection succesfuly")
                 resolve(response);
             })
             .catch(error => {
-                console.log("error on update collection", error);
+                //console.log("error on update collection", error);
                 reject({ message: "error on update collection", error })
             });
     })
@@ -149,7 +149,7 @@ export const getCollection = (id: string, apiKey: string) => {
             .then(response => {
                 resolve(response)
             }).catch(error => {
-                console.log("error on get collection", error);
+                //console.log("error on get collection", error);
                 reject({ message: "error on get collection", error });
             });
     })
@@ -170,7 +170,7 @@ export const deleteCollection = (id: string, apiKey: string) => {
             .then(response => {
                 resolve(response)
             }).catch(error => {
-                console.log("error on delete collection", error);
+                //console.log("error on delete collection", error);
                 reject({ message: "error on delete collection", error });
             });
     })
