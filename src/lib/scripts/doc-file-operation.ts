@@ -9,7 +9,7 @@ var rimraf = require("rimraf");
  * @param {string} apiKey - The API key for Postman API access.
  * @param {string} [idCollection] - (Optional) The ID of the collection (if required for the specific operation).
  */
-export default (dataJson: object, op: "import" | "update", apiKey: string, idCollection?: string) => {
+export const docFileoperation = (dataJson: object, op: "import" | "update", apiKey: string, idCollection?: string) => {
     return new Promise((resolve, reject) => {
         if (existsSync("./docs")) rimraf.sync("./docs");
         mkdir("./docs")
@@ -40,7 +40,6 @@ const checkFolder = (op: "import" | "update", apiKey: string, idCollection?: str
             const jsonContent = readFileSync("./docs/document-postman.json", 'utf8');
             const data = verifyJsonStructure(jsonContent)
             if (op === "import") {
-                console.log("importing collection")
                 importJsonToPostman(data, apiKey)
                     .then(result => {
                         resolve(result)
@@ -49,7 +48,6 @@ const checkFolder = (op: "import" | "update", apiKey: string, idCollection?: str
                     })
             } else if (op === "update") {
                 if (idCollection !== undefined) {
-                    console.log("updating collection")
                     updateCollection(idCollection, data, apiKey)
                         .then(result => {
                             resolve(result)
@@ -99,9 +97,10 @@ const importJsonToPostman = (data: any, apiKey: string) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data)
+            body: data
         }).then(response => response.json())
             .then(response => {
+                console.log("importing collection succesfuly")
                 resolve(response);
             })
             .catch(error => {
@@ -124,9 +123,10 @@ const updateCollection = (id: string, data: any, apiKey: string) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data)
+            body: data
         }).then(response => response.json())
             .then(response => {
+                console.log("updating collection succesfuly")
                 resolve(response);
             })
             .catch(error => {

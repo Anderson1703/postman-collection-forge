@@ -8,7 +8,7 @@ import { exec } from 'child_process';
  *                              It resolves with the stdout if successful.
  *                              It rejects with an object containing error details if there's an error or stderr output.
  */
-export default (routeFileOpenAPI: string, routeFilePostmanCollection: string) => {
+export const openapiToPostmanCollection = (routeFileOpenAPI: string, routeFilePostmanCollection: string) => {
   return new Promise((resolve, reject) => {
     const command = `openapi2postmanv2 -s ${routeFileOpenAPI} -o ${routeFilePostmanCollection}`;
     exec(command, (error, stdout, stderr) => {
