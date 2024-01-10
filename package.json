@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.3.0",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -30,16 +30,16 @@
     "singleQuote": true,
     "trailingComma": "es5"
   },
-  "name": "postman-collection-forge",
+  "name": "collection-forge",
   "author": "Anderson Encarnación Adames",
-  "module": "dist/postman-collection-forge.esm.js",
+  "module": "dist/collection-forge.esm.js",
   "size-limit": [
     {
-      "path": "dist/postman-collection-forge.cjs.production.min.js",
+      "path": "dist/collection-forge.cjs.production.min.js",
       "limit": "10 KB"
     },
     {
-      "path": "dist/postman-collection-forge.esm.js",
+      "path": "dist/collection-forge.esm.js",
       "limit": "10 KB"
     }
   ],
@@ -52,7 +52,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "axios": "^1.6.5",
     "dotenv": "^16.3.1",
     "node-fetch": "^3.3.2",
     "openapi-to-postmanv2": "^4.18.0"

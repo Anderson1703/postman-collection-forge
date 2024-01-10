@@ -1,7 +1,5 @@
 import { existsSync, readFileSync } from "fs"
 import { mkdir, writeFile } from "fs/promises"
-import { OperationModal } from "../../types/operation-postman";
-import axios from "axios";
 var rimraf = require("rimraf");
 
 /**
@@ -11,13 +9,23 @@ var rimraf = require("rimraf");
  * @param {string} apiKey - The API key for Postman API access.
  * @param {string} [idCollection] - (Optional) The ID of the collection (if required for the specific operation).
  */
-export default (dataJson: object, op: OperationModal, apiKey: string, idCollection?: string) => {
-    if (existsSync("./docs")) rimraf.sync("./docs");
-    mkdir("./docs")
-    writeFile(`./docs/document-postman.json`, JSON.stringify(dataJson))
-        .then(() => {
-            checkFolder(op, apiKey, idCollection)
-        }).catch(err => console.log("error on write file", err))
+export default (dataJson: object, op: "import" | "update", apiKey: string, idCollection?: string) => {
+    return new Promise((resolve, reject) => {
+        if (existsSync("./docs")) rimraf.sync("./docs");
+        mkdir("./docs")
+        writeFile(`./docs/document-postman.json`, JSON.stringify(dataJson))
+            .then(() => {
+                checkFolder(op, apiKey, idCollection)
+                    .then(response => {
+                        resolve(response)
+                    }).catch(errChecking => {
+                        reject(errChecking)
+                    })
+            }).catch(err => {
+                console.log("error on write file", err)
+                reject({ message: "error on write file", err })
+            })
+    })
 }
 
 /**
@@ -26,16 +34,42 @@ export default (dataJson: object, op: OperationModal, apiKey: string, idCollecti
  * @param {string} apiKey - The API key for Postman API access.
  * @param {string} [idCollection] - (Optional) The ID of the collection (if required for the specific operation).
  */
-const checkFolder = (op: OperationModal, apiKey: string, idCollection?: string) => {
-    if (existsSync("./docs/document-postman.json")) {
-        const jsonContent = readFileSync("./docs/document-postman.json", 'utf8');
-        const data = verifyJsonStructure(jsonContent)
-        if (op == "import") importJsonToPostman(data, apiKey)
+const checkFolder = (op: "import" | "update", apiKey: string, idCollection?: string) => {
+    return new Promise((resolve, reject) => {
+        if (existsSync("./docs/document-postman.json")) {
+            const jsonContent = readFileSync("./docs/document-postman.json", 'utf8');
+            const data = verifyJsonStructure(jsonContent)
+            if (op === "import") {
+                console.log("importing collection")
+                importJsonToPostman(data, apiKey)
+                    .then(result => {
+                        resolve(result)
+                    }).catch(errorImport => {
+                        reject(errorImport)
+                    })
+            } else if (op === "update") {
+                if (idCollection !== undefined) {
+                    console.log("updating collection")
+                    updateCollection(idCollection, data, apiKey)
+                        .then(result => {
+                            resolve(result)
+                        }).catch(errorUpdating => {
+                            reject(errorUpdating)
+                        })
+                } else {
+                    console.log("to update you need to provide the collection id")
+                    reject({ message: "to update you need to provide the collection id" })
+                }
+            } else {
+                console.log("op not know")
+                reject({ message: "op not know" })
+            }
 
-        if (op == "update" && idCollection) updateCollection(idCollection, data, apiKey)
-        else console.log("to update you need to provide the collection id")
-
-    } else console.error(`File ./docs/document-postman.json does not exist`);
+        } else {
+            console.error(`File ./docs/document-postman.json does not exist`);
+            reject({ message: "File ./docs/document-postman.json does not exist" })
+        }
+    })
 }
 
 /**
@@ -58,18 +92,23 @@ const verifyJsonStructure = (jsonContent: any) => {
  * @param {any} jsonData - The JSON data to be imported.
  * @param {string} apiKey - The API key for Postman API access.
  */
-const importJsonToPostman = (jsonData: any, apiKey: string) => {
-    axios.post(`https://api.getpostman.com/collections?apikey=${apiKey}`, jsonData, {
-        headers: {
-            'Content-Type': 'application/json',
-            'apikey': apiKey
-        }
-    }).then(response => {
-        console.log("import json to postman successfully", response.data);
+const importJsonToPostman = (data: any, apiKey: string) => {
+    return new Promise((resolve, reject) => {
+        fetch(`https://api.getpostman.com/collections?apikey=${apiKey}`, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        }).then(response => response.json())
+            .then(response => {
+                resolve(response);
+            })
+            .catch(error => {
+                console.log("error on import json to postman", error);
+                reject({ message: "error on import json to postman", error })
+            });
     })
-        .catch(error => {
-            console.log("error on import json to postman", error);
-        });
 }
 
 /**
@@ -79,16 +118,22 @@ const importJsonToPostman = (jsonData: any, apiKey: string) => {
  * @param {string} apiKey - The API key for Postman API access.
  */
 const updateCollection = (id: string, data: any, apiKey: string) => {
-    axios.put(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`, data, {
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    }).then(response => {
-        console.log("update collection successfully", response.data);
+    return new Promise((resolve, reject) => {
+        fetch(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`, {
+            method: "PUT",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        }).then(response => response.json())
+            .then(response => {
+                resolve(response);
+            })
+            .catch(error => {
+                console.log("error on update collection", error);
+                reject({ message: "error on update collection", error })
+            });
     })
-        .catch(error => {
-            console.log("error on update collection", error);
-        });
 }
 
 /**
@@ -98,19 +143,16 @@ const updateCollection = (id: string, data: any, apiKey: string) => {
  * @returns {Promise<any>} - A promise resolving to the retrieved collection.
  */
 export const getCollection = (id: string, apiKey: string) => {
-    axios.get(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'apikey': apiKey
-        }
-    }).then(response => {
-        console.log(response.data);
-        return response.data;
-    }).catch(error => {
-        console.log("error on get collection", error);
-        return error;
-    });
-
+    return new Promise((resolve, reject) => {
+        fetch(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`)
+            .then(response => response.json())
+            .then(response => {
+                resolve(response)
+            }).catch(error => {
+                console.log("error on get collection", error);
+                reject({ message: "error on get collection", error });
+            });
+    })
 }
 
 /**
@@ -120,17 +162,17 @@ export const getCollection = (id: string, apiKey: string) => {
  * @returns {Promise<any>} - A promise resolving to the result of the deletion operation.
  */
 export const deleteCollection = (id: string, apiKey: string) => {
-    axios.delete(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'apikey': apiKey
-        }
-    }).then(response => {
-        console.log(response.data);
-        return response.data;
-    }).catch(error => {
-        console.log("error on delete collection", error);
-        return error;
-    });
+    return new Promise((resolve, reject) => {
+        fetch(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`, {
+            method: "DELETE",
+            headers: { 'Content-Type': 'application/json', }
+        }).then(response => response.json())
+            .then(response => {
+                resolve(response)
+            }).catch(error => {
+                console.log("error on delete collection", error);
+                reject({ message: "error on delete collection", error });
+            });
+    })
 
 }
