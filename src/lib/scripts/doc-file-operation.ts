@@ -28,7 +28,7 @@ export const importJsonToPostman = (data: any, apiKey: string) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: data
+            body: JSON.stringify(data)
         }).then(response => response.json())
             .then(response => {
                 //console.log("importing collection succesfuly")
@@ -54,7 +54,7 @@ export const updateCollection = (id: string, data: any, apiKey: string) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: data
+            body: JSON.stringify(data)
         }).then(response => response.json())
             .then(response => {
                 //console.log("updating collection succesfuly")
