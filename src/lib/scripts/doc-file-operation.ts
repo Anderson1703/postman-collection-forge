@@ -1,89 +1,20 @@
-import { existsSync, readFileSync } from "fs"
+import { existsSync } from "fs"
 import { mkdir, writeFile } from "fs/promises"
 var rimraf = require("rimraf");
 
-/**
- * Writes provided data into a Postman collection file and performs related actions based on the provided parameters.
- * @param {object} dataJson - The data to be written into the Postman collection file.
- * @param {OperationModal} op - The operation modal indicating the action to be performed.
- * @param {string} apiKey - The API key for Postman API access.
- * @param {string} [idCollection] - (Optional) The ID of the collection (if required for the specific operation).
- */
-export const docFileoperation = (dataJson: object, op: "import" | "update", apiKey: string, idCollection?: string) => {
+export const generateFileJson = (object: any) => {
     return new Promise((resolve, reject) => {
         if (existsSync("./docs")) rimraf.sync("./docs");
         mkdir("./docs")
-        writeFile(`./docs/document-postman.json`, JSON.stringify(dataJson))
+        writeFile(`./docs/document-postman.json`, JSON.stringify(object))
             .then(() => {
-                checkFolder(op, apiKey, idCollection)
-                    .then(response => {
-                        resolve(response)
-                    }).catch(errChecking => {
-                        reject(errChecking)
-                    })
+                resolve({ message: "file generate correctly on docs folders" })
             }).catch(err => {
-                //console.log("error on write file", err)
-                reject({ message: "error on write file", err })
+                reject({ message: "error on generate file", err })
             })
     })
 }
 
-/**
- * Checks the existence of the Postman collection file and performs actions based on its presence.
- * @param {OperationModal} op - The operation modal indicating the action to be performed.
- * @param {string} apiKey - The API key for Postman API access.
- * @param {string} [idCollection] - (Optional) The ID of the collection (if required for the specific operation).
- */
-const checkFolder = (op: "import" | "update", apiKey: string, idCollection?: string) => {
-    return new Promise((resolve, reject) => {
-        if (existsSync("./docs/document-postman.json")) {
-            const jsonContent = readFileSync("./docs/document-postman.json", 'utf8');
-            const data = verifyJsonStructure(jsonContent)
-            if (op === "import") {
-                importJsonToPostman(data, apiKey)
-                    .then(result => {
-                        resolve(result)
-                    }).catch(errorImport => {
-                        reject(errorImport)
-                    })
-            } else if (op === "update") {
-                if (idCollection !== undefined) {
-                    updateCollection(idCollection, data, apiKey)
-                        .then(result => {
-                            resolve(result)
-                        }).catch(errorUpdating => {
-                            reject(errorUpdating)
-                        })
-                } else {
-                    //console.log("to update you need to provide the collection id")
-                    reject({ message: "to update you need to provide the collection id" })
-                }
-            } else {
-                //console.log("op not know")
-                reject({ message: "op not know" })
-            }
-
-        } else {
-            //console.error(`File ./docs/document-postman.json does not exist`);
-            reject({ message: "File ./docs/document-postman.json does not exist" })
-        }
-    })
-}
-
-/**
- * Verifies the JSON structure and adjusts if necessary.
- * @param {any} jsonContent - The JSON content to be verified.
- * @returns {any} - The verified JSON content.
- */
-const verifyJsonStructure = (jsonContent: any) => {
-    let data;
-    if (!jsonContent.collection) {
-        data = {
-            collection: jsonContent
-        }
-    } else { data = jsonContent }
-    return data;
-}
 
 /**
  * Imports JSON data into Postman.
