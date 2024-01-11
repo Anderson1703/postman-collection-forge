@@ -6,7 +6,7 @@ export const generateFileJson = (object: any) => {
     return new Promise((resolve, reject) => {
         if (existsSync("./docs")) rimraf.sync("./docs");
         mkdir("./docs")
-        writeFile(`./docs/document-postman.json`, JSON.stringify(object))
+        writeFile(`./docs/document.json`, JSON.stringify(object))
             .then(() => {
                 resolve({ message: "file generate correctly on docs folders" })
             }).catch(err => {
@@ -22,13 +22,14 @@ export const generateFileJson = (object: any) => {
  * @param {string} apiKey - The API key for Postman API access.
  */
 export const importJsonToPostman = (data: any, apiKey: string) => {
+    const dataAdaptered = adapterRequest(data)
     return new Promise((resolve, reject) => {
         fetch(`https://api.getpostman.com/collections?apikey=${apiKey}`, {
             method: "POST",
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(dataAdaptered)
         }).then(response => response.json())
             .then(response => {
                 //console.log("importing collection succesfuly")
@@ -41,6 +42,17 @@ export const importJsonToPostman = (data: any, apiKey: string) => {
     })
 }
 
+const adapterRequest = (data: any) => {
+    if (data.collection) {
+        return data
+    } else {
+        const dataAdaptered = {
+            collection: data
+        }
+        return dataAdaptered
+    }
+}
+
 /**
  * Updates a collection on Postman.
  * @param {string} id - The ID of the collection to be updated.
@@ -48,13 +60,14 @@ export const importJsonToPostman = (data: any, apiKey: string) => {
  * @param {string} apiKey - The API key for Postman API access.
  */
 export const updateCollection = (id: string, data: any, apiKey: string) => {
+    const dataAdaptered = adapterRequest(data)
     return new Promise((resolve, reject) => {
         fetch(`https://api.getpostman.com/collections/${id}?apikey=${apiKey}`, {
             method: "PUT",
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(dataAdaptered)
         }).then(response => response.json())
             .then(response => {
                 //console.log("updating collection succesfuly")
